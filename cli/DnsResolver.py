@@ -1,4 +1,5 @@
 import socket
+from Cache import *
 
 dns_server = "8.8.8.8"
 dns_port = 53
@@ -93,13 +94,19 @@ def dns_resolver(domain_name):
 
 
 if __name__ == "__main__":
+    cache = Cache(max_size=5)
     while True:
         domain_name = input("Enter domain name: ")
         if domain_name == 'break':
             break
-        ip_addresses = dns_resolver(domain_name)
-        if ip_addresses:
-            for ip_address in ip_addresses:
-                print(f"IP address of {domain_name}: {ip_address}")
+        if cache.get(domain_name):
+            print("From cache\n______________")
+            print(f"Ip addresses for domain name {domain_name} are :{cache.get(domain_name)}")
         else:
-            print(f"Your domain name {domain_name} is incorrect. We can't find its ip address")
+            ip_addresses = dns_resolver(domain_name)
+            cache.set(domain_name, ip_addresses)
+            if ip_addresses:
+                for ip_address in ip_addresses:
+                    print(f"IP address of {domain_name} are: {ip_address}")
+            else:
+                print(f"Your domain name {domain_name} is incorrect. We can't find its ip address")
