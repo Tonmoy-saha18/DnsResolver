@@ -40,32 +40,39 @@ def resolve_dns(domain_name):
     return response
 
 
+def isValidResponse(response):
+    rcode_value = str(response)[10:12]
+    return rcode_value == '80'
+
+
 def parse_dns_response(response):
-    ip_address_array = []
-    # Skip header bytes
-    response = response[12:]
+    if isValidResponse(response):
+        ip_address_array = []
+        # Skip header bytes
+        response = response[12:]
 
-    # Skip QNAME (query domain name)
-    while response[0] != 0:
-        length = response[0]
-        response = response[length + 1:]
+        # Skip QNAME (query domain name)
+        while response[0] != 0:
+            length = response[0]
+            response = response[length + 1:]
 
-    # Skip QTYPE and QCLASS fields and other fields
-    response = response[7:]
+        # Skip QTYPE and QCLASS fields and other fields
+        response = response[7:]
 
-    # Skipping type of records, internet class , ttl values, and ip address size
-    response = response[10:]
+        # Skipping type of records, internet class , ttl values, and ip address size
+        response = response[10:]
 
-    # Extract the IP address (4 bytes)
-    while len(response) > 0:
-        try:
-            ip_address = ".".join(str(byte) for byte in response[:4])
-            ip_address_array.append(ip_address)
-            response = response[16:]
-        except Exception as e:
-            print(e)
-            break
-    return ip_address_array
+        # Extract the IP address (4 bytes)
+        while len(response) > 0:
+            try:
+                ip_address = ".".join(str(byte) for byte in response[:4])
+                ip_address_array.append(ip_address)
+                response = response[16:]
+            except Exception as e:
+                print(e)
+                break
+        return ip_address_array
+    return None
 
 
 def dns_resolver(domain_name):
@@ -91,5 +98,8 @@ if __name__ == "__main__":
         if domain_name == 'break':
             break
         ip_addresses = dns_resolver(domain_name)
-        for ip_address in ip_addresses:
-            print(f"IP address of {domain_name}: {ip_address}")
+        if ip_addresses:
+            for ip_address in ip_addresses:
+                print(f"IP address of {domain_name}: {ip_address}")
+        else:
+            print(f"Your domain name {domain_name} is incorrect. We can't find its ip address")
